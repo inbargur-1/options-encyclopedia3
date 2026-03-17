@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Options Strategy Encyclopedia</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8f9fb;color:#111;font-size:14px;min-height:100vh}
+
+/* ── DESKTOP LAYOUT (≥ 768px) ── */
+.shell{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:260px;min-width:260px;background:#fff;border-right:1px solid #e5e7eb;display:flex;flex-direction:column;overflow:hidden}
+.content{flex:1;overflow-y:auto;background:#f8f9fb}
+.mobile-header{display:none}
+.mobile-back-btn{display:none}
+
+/* ── MOBILE LAYOUT (< 768px) ── */
+@media(max-width:767px){
+  .shell{flex-direction:column;height:100vh;overflow:hidden}
+  .sidebar{width:100%;min-width:unset;border-right:none;border-bottom:none;height:100%;display:flex;flex-direction:column}
+  .sidebar.hidden{display:none}
+  .content{flex:1;overflow-y:auto;display:none}
+  .content.visible{display:block}
+  .mobile-header{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#fff;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:50}
+  .mobile-back-btn{display:flex;align-items:center;gap:6px;background:none;border:none;font-size:13px;color:#2563eb;font-weight:600;cursor:pointer;padding:0}
+  .mobile-header-title{font-size:14px;font-weight:700;color:#1a1a2e;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .detail-pane{padding:16px 14px 80px}
+  .cards-row{grid-template-columns:1fr}
+  .fin-row{grid-template-columns:1fr}
+}
+
+/* ── SIDEBAR TOP ── */
+.sb-top{padding:16px 16px 12px;border-bottom:1px solid #e5e7eb}
+.sb-logo{font-size:13px;font-weight:700;color:#1a1a2e;letter-spacing:-.01em;margin-bottom:10px}
+.sb-logo span{color:#2563eb}
+.sb-logo-sub{font-size:11px;color:#9ca3af;font-weight:400;margin-top:1px}
+.sb-search{position:relative}
+.sb-search input{width:100%;padding:8px 10px 8px 30px;border:1px solid #e5e7eb;border-radius:7px;font-size:13px;background:#f8f9fb;color:#111;outline:none;transition:border-color .15s}
+.sb-search input:focus{border-color:#2563eb;background:#fff}
+.sb-search-ico{position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:13px;color:#9ca3af;pointer-events:none}
+.dd{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #e5e7eb;border-radius:8px;z-index:100;max-height:240px;overflow-y:auto;display:none;box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.dd.open{display:block}
+.dd-row{padding:8px 12px;cursor:pointer;font-size:12.5px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;gap:8px}
+.dd-row:last-child{border-bottom:none}
+.dd-row:hover,.dd-row:active{background:#f8f9fb}
+.dd-name{font-weight:600;flex:1}
+.dd-badge{font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+
+/* ── CAT TABS ── */
+.sb-cats{padding:10px 8px 8px;border-bottom:1px solid #e5e7eb;display:flex;flex-wrap:wrap;gap:4px}
+.cat-chip{padding:4px 10px;border-radius:20px;font-size:11.5px;font-weight:600;cursor:pointer;border:1px solid #e5e7eb;background:#fff;color:#6b7280;transition:all .15s;white-space:nowrap;user-select:none}
+.cat-chip:hover{border-color:#9ca3af;color:#374151}
+.cat-chip.active{color:#fff;border-color:transparent}
+.cat-chip[data-c="all"].active{background:#1a1a2e}
+.cat-chip[data-c="bullish"].active{background:#059669}
+.cat-chip[data-c="bearish"].active{background:#dc2626}
+.cat-chip[data-c="neutral"].active{background:#2563eb}
+.cat-chip[data-c="volatility"].active{background:#7c3aed}
+.cat-chip[data-c="income"].active{background:#d97706}
+.cat-chip[data-c="greek"].active{background:#0891b2}
+.cat-chip[data-c="exotic"].active{background:#9d174d}
+
+/* ── STRATEGY LIST ── */
+.sb-list{flex:1;overflow-y:auto;padding:8px 0}
+.sb-list::-webkit-scrollbar{width:3px}
+.sb-list::-webkit-scrollbar-thumb{background:#e5e7eb}
+.sb-group-label{padding:10px 16px 4px;font-size:10.5px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em}
+.sb-item{padding:9px 16px;cursor:pointer;display:flex;align-items:center;gap:8px;border-left:3px solid transparent;transition:all .12s}
+.sb-item:hover{background:#f8f9fb}
+.sb-item.active{background:#eff6ff;border-left-color:#2563eb}
+.sb-item-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sb-item-name{font-size:13px;font-weight:500;line-height:1.2}
+.sb-item-sub{font-size:11px;color:#9ca3af;margin-top:1px}
+.sb-item-tag{margin-left:auto;font-size:10px;padding:1px 6px;border-radius:4px;font-weight:600;flex-shrink:0}
+.sb-count{font-size:11px;color:#9ca3af;padding:8px 16px 4px;border-top:1px solid #f3f4f6;margin-top:4px}
+
+/* ── EMPTY PANE ── */
+.empty-pane{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;color:#9ca3af;text-align:center;padding:40px}
+.empty-pane-icon{width:48px;height:48px;border-radius:12px;background:#e5e7eb;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:4px}
+.empty-pane-title{font-size:15px;font-weight:600;color:#6b7280}
+.empty-pane-sub{font-size:13px;line-height:1.6;max-width:260px}
+
+/* ── DETAIL PANE ── */
+.detail-pane{padding:32px 40px;max-width:820px}
+.d-header{margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid #e5e7eb}
+.d-crumbs{display:flex;align-items:center;gap:6px;font-size:12px;color:#9ca3af;margin-bottom:12px}
+.d-crumb-sep{color:#d1d5db}
+.d-title{font-size:22px;font-weight:700;color:#1a1a2e;margin-bottom:8px;line-height:1.2}
+.d-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.d-badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;text-transform:uppercase;letter-spacing:.05em}
+.d-view{font-size:13.5px;color:#374151;line-height:1.6;max-width:620px}
+.sec-title{font-size:10.5px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+.cards-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.info-card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px}
+.ic-label{font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.ic-val{font-size:13.5px;color:#1a1a2e;line-height:1.5;font-weight:500}
+
+/* ── FINANCIALS ── */
+.fin-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px}
+.fin-box{border-radius:10px;padding:14px 16px;border:1px solid}
+.fin-box.profit{background:#f0fdf4;border-color:#bbf7d0}
+.fin-box.loss{background:#fff1f2;border-color:#fecdd3}
+.fin-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.fin-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em}
+.fin-box.profit .fin-title{color:#059669}
+.fin-box.loss .fin-title{color:#dc2626}
+.fin-amount{font-size:15px;font-weight:700;margin-bottom:4px}
+.fin-box.profit .fin-amount{color:#059669}
+.fin-box.loss .fin-amount{color:#dc2626}
+.fin-dir-pill{display:inline-block;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;margin-bottom:5px}
+.fin-box.profit .fin-dir-pill{background:#dcfce7;color:#15803d}
+.fin-box.loss .fin-dir-pill{background:#ffe4e6;color:#b91c1c}
+.fin-note{font-size:12px;color:#6b7280;line-height:1.4}
+.fin-unlim{font-size:10px;font-weight:700;background:#dbeafe;color:#1d4ed8;padding:2px 7px;border-radius:4px}
+.be-band{background:#f8f9fb;border:1px solid #e5e7eb;border-radius:8px;padding:9px 14px;display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.be-item{display:flex;align-items:center;gap:6px;font-size:12.5px}
+.be-dot{width:8px;height:8px;border-radius:50%;background:#9ca3af;flex-shrink:0}
+.be-label{color:#6b7280}
+.be-val{font-weight:700;color:#1a1a2e}
+
+/* ── MARGIN ── */
+.margin-block{border-radius:10px;padding:14px 16px;border:1px solid;margin-bottom:20px}
+.margin-block.low{background:#f0fdf4;border-color:#bbf7d0}
+.margin-block.med{background:#fffbeb;border-color:#fde68a}
+.margin-block.high{background:#fff1f2;border-color:#fecdd3}
+.margin-top-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.margin-badge{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:5px;text-transform:uppercase;letter-spacing:.04em}
+.margin-badge.low{background:#dcfce7;color:#15803d}
+.margin-badge.med{background:#fef3c7;color:#92400e}
+.margin-badge.high{background:#ffe4e6;color:#b91c1c}
+.margin-req{font-size:13.5px;font-weight:700;color:#1a1a2e;margin-bottom:4px}
+.margin-note{font-size:12.5px;color:#6b7280;line-height:1.5}
+
+/* ── P&L BAR ── */
+.plbar-wrap{margin-bottom:20px}
+.plbar-track{position:relative;height:28px;border-radius:6px;overflow:hidden;background:#f1f5f9;border:1px solid #e5e7eb;margin-bottom:24px}
+.bz{position:absolute;top:0;bottom:0}
+.bz-win{background:rgba(5,150,105,.12)}
+.bz-loss{background:rgba(220,38,38,.1)}
+.plbar-marker{position:absolute;top:-2px;bottom:-2px;width:2px;z-index:5}
+.plbar-marker.spot{background:#2563eb}
+.plbar-marker.be{background:#9ca3af;opacity:.8}
+.plbar-mlabel{position:absolute;font-size:10.5px;font-weight:700;white-space:nowrap;top:-18px;left:50%;transform:translateX(-50%)}
+.plbar-mlabel.spot{color:#2563eb}
+.plbar-mlabel-bot{position:absolute;font-size:10px;white-space:nowrap;bottom:-17px;left:50%;transform:translateX(-50%);color:#9ca3af}
+.plbar-axis{display:flex;justify-content:space-between;font-size:11px;color:#9ca3af;margin-top:4px}
+.plbar-legend{display:flex;gap:14px;margin-top:8px}
+.pl-leg{display:flex;align-items:center;gap:5px;font-size:11.5px;color:#6b7280}
+.pl-leg-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+/* ── CASES ── */
+.cases{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.case-row{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-radius:9px;border:1px solid}
+.case-row.win{background:#f0fdf4;border-color:#bbf7d0}
+.case-row.lose{background:#fff1f2;border-color:#fecdd3}
+.case-row.neutral-c{background:#f8f9fb;border-color:#e5e7eb}
+.case-ico{font-size:14px;margin-top:1px;flex-shrink:0;line-height:1}
+.case-price{font-size:11.5px;color:#6b7280;margin-bottom:2px;font-weight:600}
+.case-result{font-size:13.5px;font-weight:700;margin-bottom:2px}
+.case-row.win .case-result{color:#059669}
+.case-row.lose .case-result{color:#dc2626}
+.case-row.neutral-c .case-result{color:#2563eb}
+.case-desc{font-size:12px;color:#6b7280;line-height:1.4}
+
+/* ── KEYWORDS ── */
+.kw-wrap{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.kw{font-size:11px;background:#f1f5f9;border:1px solid #e5e7eb;color:#6b7280;padding:2px 7px;border-radius:4px}
+
+/* ── COLOR HELPERS ── */
+.col-bullish{color:#059669}.col-bearish{color:#dc2626}.col-neutral{color:#2563eb}
+.col-volatility{color:#7c3aed}.col-income{color:#d97706}.col-greek{color:#0891b2}.col-exotic{color:#9d174d}
+.dot-bullish{background:#059669}.dot-bearish{background:#dc2626}.dot-neutral{background:#2563eb}
+.dot-volatility{background:#7c3aed}.dot-income{background:#d97706}.dot-greek{background:#0891b2}.dot-exotic{background:#9d174d}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#e5e7eb;border-radius:2px}
+</style>
+</head>
+<body>
+<div class="shell" id="shell">
+
+  <!-- ── SIDEBAR ── -->
+  <div class="sidebar" id="sidebar">
+    <div class="sb-top">
+      <div class="sb-logo">Options<span>Encyclopedia</span>
+        <div class="sb-logo-sub">US Equity Listed Options · OCC Cleared</div>
+      </div>
+      <div class="sb-search">
+        <span class="sb-search-ico">⌕</span>
+        <input id="searchInput" type="text" placeholder="Search: naked, vega, credit…" autocomplete="off">
+        <div class="dd" id="dropDown"></div>
+      </div>
+    </div>
+    <div class="sb-cats" id="catBar"></div>
+    <div class="sb-list" id="stratList"></div>
+  </div>
+
+  <!-- ── CONTENT ── -->
+  <div class="content" id="contentArea">
+    <div class="empty-pane">
+      <div class="empty-pane-icon">📖</div>
+      <div class="empty-pane-title">Select a strategy</div>
+      <div class="empty-pane-sub">Choose from the sidebar, or search by name, keyword or style — e.g. "naked", "credit", "vega", "iron"</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const STRATS=[
+{name:"Long Call",cat:"bullish",action:"debit",
+ kw:["call","buy","debit","bullish","unlimited upside","leverage"],
+ contractAction:"Buy to Open — pay premium upfront",
+ rights:"Right to buy 100 shares at the strike price before expiry",
+ view:"Expects a strong upward move. Profit is theoretically unlimited; loss is capped at the premium paid.",
+ profitDir:"if price increases",profitUnlim:true,profitAmt:"Unlimited",profitNote:"Grows as stock rises above the $103 breakeven",
+ lossDir:"if price decreases",lossFixed:true,lossAmt:"$300",lossNote:"Entire premium lost if stock closes below $100 at expiry",
+ bes:[{label:"BE",price:103}],
+ margin:{lvl:"low",req:"$300 — full premium paid upfront",note:"Debit trade; no margin account required. The most you can ever lose is exactly what you paid."},
+ cases:[{p:115,t:"win",r:"+$1,200",d:"Buy at $100, stock at $115. Gain $1,500 − $300 premium."},{p:103,t:"neutral-c",r:"Breakeven",d:"Strike + premium = $103."},{p:95,t:"lose",r:"−$300",d:"OTM at expiry — entire premium lost."}],
+ range:[75,130],zones:[{f:75,t:103,z:"loss"},{f:103,t:130,z:"win"}]},
+
+{name:"Short Put",cat:"bullish",action:"credit",
+ kw:["put","sell","credit","bullish","naked put","assignment","income"],
+ contractAction:"Sell to Open — collect premium immediately",
+ rights:"Obligated to buy 100 shares at strike if buyer assigns you",
+ view:"Expects stock to stay above strike. Collects premium as income; risk is being forced to buy at strike.",
+ profitDir:"if price increases (expires OTM)",profitFixed:true,profitAmt:"$300",profitNote:"Full premium kept if option expires out-of-the-money",
+ lossDir:"if price decreases",lossAmt:"Up to $9,700",lossNote:"Stock could fall to zero; loss = strike minus premium received",
+ bes:[{label:"BE",price:97}],
+ margin:{lvl:"high",req:"~$2,000–$3,000 (naked put margin)",note:"Typical formula: 20% of stock price ($2,000) + premium received ($300). Cash-secured variant requires full $10,000 cash instead."},
+ cases:[{p:105,t:"win",r:"+$300",d:"Expires OTM. Premium kept in full."},{p:97,t:"neutral-c",r:"Breakeven",d:"Net cost if assigned = $97/share."},{p:85,t:"lose",r:"−$1,200 net",d:"Assigned: buy at $100, stock at $85. Loss = $1,500 − $300."}],
+ range:[75,130],zones:[{f:75,t:97,z:"loss"},{f:97,t:130,z:"win"}]},
+
+{name:"Bull Call Spread",cat:"bullish",action:"debit",
+ kw:["call","spread","debit","bullish","vertical","defined risk"],
+ contractAction:"Buy $100 call + Sell $105 call (same expiry) — net debit",
+ rights:"Right to buy at $100; obligated to sell at $105",
+ view:"Moderate bullish outlook. Reduces cost vs. long call by selling an upper strike; caps profit at $105.",
+ profitDir:"if price increases (between strikes)",profitFixed:true,profitAmt:"~$300",profitNote:"Capped at $105. Max = spread width ($500) − net debit ($200)",
+ lossDir:"if price decreases",lossFixed:true,lossAmt:"~$200",lossNote:"Full net debit lost if stock closes below the lower strike ($100) at expiry",
+ bes:[{label:"BE",price:102}],
+ margin:{lvl:"low",req:"$200 — net debit paid",note:"Defined-risk spread. Net premium is the total capital at risk — no additional margin needed."},
+ cases:[{p:107,t:"win",r:"+$300",d:"Both legs ITM. Spread worth $500 − $200 debit."},{p:102,t:"neutral-c",r:"Breakeven",d:"Lower strike + net debit = $102."},{p:97,t:"lose",r:"−$200",d:"Both OTM — full debit lost."}],
+ range:[75,130],zones:[{f:75,t:102,z:"loss"},{f:102,t:130,z:"win"}]},
+
+{name:"Bull Put Spread",cat:"bullish",action:"credit",
+ kw:["put","spread","credit","bullish","vertical","income"],
+ contractAction:"Sell $100 put + Buy $95 put (same expiry) — net credit",
+ rights:"Obligated to buy at $100; right to sell at $95 (limits downside)",
+ view:"Expects stock to stay above $100. Credit received upfront; $95 put wing caps maximum downside.",
+ profitDir:"if price increases (expires OTM)",profitFixed:true,profitAmt:"~$200",profitNote:"Full credit kept if stock closes above short put strike at expiry",
+ lossDir:"if price decreases",lossFixed:true,lossAmt:"~$300",lossNote:"Max loss = spread width ($500) − credit ($200). Capped by long put wing",
+ bes:[{label:"BE",price:98}],
+ margin:{lvl:"med",req:"$300 — max possible loss",note:"Margin = spread width − net credit received. The $95 long put caps risk; broker holds only the max loss amount as collateral."},
+ cases:[{p:102,t:"win",r:"+$200",d:"Both puts OTM. Full credit kept."},{p:98,t:"neutral-c",r:"Breakeven",d:"Short strike − net credit = $98."},{p:92,t:"lose",r:"−$300",d:"Both legs ITM. Max loss realized."}],
+ range:[75,130],zones:[{f:75,t:98,z:"loss"},{f:98,t:130,z:"win"}]},
+
+{name:"Cash-Secured Put",cat:"bullish",action:"credit",
+ kw:["put","cash secured","credit","conservative","assignment","income"],
+ contractAction:"Sell to Open — $10,000 cash held as full collateral",
+ rights:"Obligated to buy 100 shares at strike if assigned; cash reserved to fund purchase",
+ view:"Willing to own stock at strike. Conservative income strategy — no leverage used.",
+ profitDir:"if price increases (expires OTM)",profitFixed:true,profitAmt:"$300",profitNote:"Premium kept if stock stays above strike. Effective share cost reduced by the premium",
+ lossDir:"if price decreases",lossAmt:"Up to $9,700",lossNote:"Worst case: assigned at $100, stock goes to zero. Net = $10,000 − $300 premium",
+ bes:[{label:"Effective cost",price:97}],
+ margin:{lvl:"low",req:"$10,000 cash (full strike × 100 shares)",note:"Must hold the full purchase price in cash as collateral. No margin borrowing — the safest way to sell a put."},
+ cases:[{p:105,t:"win",r:"+$300",d:"Expires OTM. Cash returned, premium kept."},{p:97,t:"neutral-c",r:"Breakeven",d:"Assigned at $100; effective cost = $97/share."},{p:85,t:"lose",r:"Unrealized loss",d:"Assigned: own 100 shares at $100 when worth $85. Net cost basis $97."}],
+ range:[75,130],zones:[{f:75,t:97,z:"loss"},{f:97,t:130,z:"win"}]},
+
+{name:"Covered Call",cat:"income",action:"credit",
+ kw:["call","covered","income","yield","own stock","assignment","conservative"],
+ contractAction:"Own 100 shares + Sell OTM call — collect premium",
+ rights:"Obligated to sell your 100 shares at strike if the call is exercised against you",
+ view:"Income generation on existing stock. Sacrifices upside above the strike in exchange for premium income.",
+ profitDir:"if price increases (up to strike)",profitFixed:true,profitAmt:"$300 + gain to strike",profitNote:"Profit capped if shares are called away. Max = (strike − cost) + premium",
+ lossDir:"if price decreases",lossAmt:"Stock falls to zero minus $300",lossNote:"Premium partially cushions stock decline but the primary risk is the underlying falling sharply",
+ bes:[{label:"Net cost",price:97}],
+ margin:{lvl:"low",req:"100 shares owned — no cash margin",note:"Shares are the collateral. Fully covered — no additional margin. Lowest-risk way to sell a call."},
+ cases:[{p:98,t:"win",r:"+$300",d:"Call OTM. Keep premium, still own shares."},{p:110,t:"win",r:"+$300 capped",d:"Called away at $100. Net = premium only above cost."},{p:82,t:"lose",r:"−$1,500",d:"Shares down $1,800; $300 premium partially offsets."}],
+ range:[75,130],zones:[{f:75,t:97,z:"loss"},{f:97,t:130,z:"win"}]},
+
+{name:"Long Put",cat:"bearish",action:"debit",
+ kw:["put","long","buy","debit","bearish","downside","hedge","protection"],
+ contractAction:"Buy to Open — pay premium upfront",
+ rights:"Right to sell 100 shares at the strike price before expiry",
+ view:"Expects a strong downward move. Profit increases as stock falls; loss capped at premium paid.",
+ profitDir:"if price decreases",profitFixed:false,profitAmt:"Up to $9,700",profitNote:"Profit grows as stock falls below the $97 breakeven. Max if stock reaches zero",
+ lossDir:"if price increases (expires OTM)",lossFixed:true,lossAmt:"$300",lossNote:"Entire premium lost if stock closes at or above $100 at expiry",
+ bes:[{label:"BE",price:97}],
+ margin:{lvl:"low",req:"$300 — full premium paid upfront",note:"Purely debit — no margin account required. Max loss is exactly the premium paid."},
+ cases:[{p:85,t:"win",r:"+$1,200",d:"Sell at $100, stock at $85. Gain $1,500 − $300 premium."},{p:97,t:"neutral-c",r:"Breakeven",d:"Strike − premium = $97."},{p:102,t:"lose",r:"−$300",d:"OTM at expiry — full premium lost."}],
+ range:[75,130],zones:[{f:75,t:97,z:"win"},{f:97,t:130,z:"loss"}]},
+
+{name:"Short Call",cat:"bearish",action:"credit",
+ kw:["call","short","sell","naked","credit","bearish","unlimited risk"],
+ contractAction:"Sell to Open — collect premium immediately",
+ rights:"Obligated to sell 100 shares at strike if buyer exercises against you",
+ view:"Expects stock to stay flat or fall. Collects premium; risk is unlimited if stock rises.",
+ profitDir:"if price decreases (expires OTM)",profitFixed:true,profitAmt:"$300",profitNote:"Full premium kept if stock stays below strike at expiry",
+ lossDir:"if price increases",lossAmt:"Unlimited",lossNote:"Loss grows with every dollar above breakeven. Riskiest single-leg position",
+ bes:[{label:"BE",price:103}],
+ margin:{lvl:"high",req:"~$2,000–$3,000+ (naked call margin)",note:"Highest margin of any strategy. Formula: 20% of stock price + premium received. Restricted to top-tier accounts only."},
+ cases:[{p:97,t:"win",r:"+$300",d:"Expires OTM. Keep full premium."},{p:103,t:"neutral-c",r:"Breakeven",d:"Strike + premium = $103."},{p:115,t:"lose",r:"−$900 net",d:"Assigned: sell at $100, stock at $115. Net = −$1,500 + $300."}],
+ range:[75,130],zones:[{f:75,t:103,z:"win"},{f:103,t:130,z:"loss"}]},
+
+{name:"Bear Put Spread",cat:"bearish",action:"debit",
+ kw:["put","spread","debit","bearish","vertical","defined risk","moderate"],
+ contractAction:"Buy $100 put + Sell $95 put (same expiry) — net debit",
+ rights:"Right to sell at $100; obligated to buy at $95",
+ view:"Moderate bearish outlook. Lower cost than long put; profit capped at the lower strike.",
+ profitDir:"if price decreases (between strikes)",profitFixed:true,profitAmt:"~$300",profitNote:"Capped at $95. Max = spread width ($500) − net debit ($200)",
+ lossDir:"if price increases",lossFixed:true,lossAmt:"~$200",lossNote:"Full debit lost if stock stays at or above upper strike at expiry",
+ bes:[{label:"BE",price:98}],
+ margin:{lvl:"low",req:"$200 — net debit paid",note:"Defined-risk spread. Net premium is the total capital at risk."},
+ cases:[{p:93,t:"win",r:"+$300",d:"Both legs ITM. Spread worth $500 − $200 debit."},{p:98,t:"neutral-c",r:"Breakeven",d:"Upper strike − net debit = $98."},{p:102,t:"lose",r:"−$200",d:"Both OTM — full debit lost."}],
+ range:[75,130],zones:[{f:75,t:98,z:"win"},{f:98,t:130,z:"loss"}]},
+
+{name:"Bear Call Spread",cat:"bearish",action:"credit",
+ kw:["call","spread","credit","bearish","vertical","income"],
+ contractAction:"Sell $100 call + Buy $105 call (same expiry) — net credit",
+ rights:"Obligated to sell at $100; right to buy at $105 (caps your upside loss)",
+ view:"Expects stock to stay below $100. Credit received upfront; $105 long call limits maximum loss.",
+ profitDir:"if price decreases (expires OTM)",profitFixed:true,profitAmt:"~$200",profitNote:"Full credit kept if stock closes below short call strike at expiry",
+ lossDir:"if price increases",lossFixed:true,lossAmt:"~$300",lossNote:"Max loss = spread width ($500) − credit ($200). Capped by long call wing",
+ bes:[{label:"BE",price:102}],
+ margin:{lvl:"med",req:"$300 — max possible loss",note:"Margin = spread width − net credit. The $105 long call caps risk; only max loss held as collateral."},
+ cases:[{p:97,t:"win",r:"+$200",d:"Both calls OTM. Full credit kept."},{p:102,t:"neutral-c",r:"Breakeven",d:"Short strike + net credit = $102."},{p:108,t:"lose",r:"−$300",d:"Both legs ITM. Max loss realized."}],
+ range:[75,130],zones:[{f:75,t:102,z:"win"},{f:102,t:130,z:"loss"}]},
+
+{name:"Protective Put",cat:"bearish",action:"debit",
+ kw:["put","protective","hedge","insurance","portfolio protection","debit","long stock"],
+ contractAction:"Own 100 shares + Buy put — pay premium",
+ rights:"Right to sell shares at strike — floors your downside at strike price",
+ view:"Long stock but fear a sharp decline. Pay premium for insurance; full upside preserved.",
+ profitDir:"if price increases",profitUnlim:true,profitAmt:"Unlimited (stock rises)",profitNote:"Full upside retained; only cost is the premium paid as insurance",
+ lossDir:"if price decreases (capped at strike)",lossFixed:true,lossAmt:"$300 max additional loss",lossNote:"Downside capped at strike regardless of how far stock falls",
+ bes:[{label:"BE",price:103}],
+ margin:{lvl:"low",req:"$300 — put premium paid",note:"Long put is a debit — no margin. Shares already owned. Pure insurance on your stock position."},
+ cases:[{p:80,t:"win",r:"Loss capped −$300",d:"Stock at $80 but put lets you sell at $100. Cost = only premium."},{p:115,t:"win",r:"+$1,200",d:"Put worthless; stock gains $1,500 − $300 premium."},{p:99,t:"neutral-c",r:"Small net loss",d:"Tiny stock gain offset by premium paid."}],
+ range:[75,130],zones:[{f:75,t:103,z:"loss"},{f:103,t:130,z:"win"}]},
+
+{name:"Synthetic Short",cat:"bearish",action:"variable",
+ kw:["synthetic","short stock","put","call","bearish","replication","no borrow"],
+ contractAction:"Sell $100 call + Buy $100 put — same strike, same expiry",
+ rights:"Obligated to sell at $100 (call) + right to sell at $100 (put) = replicates short stock",
+ view:"Strongly bearish. Avoids borrowing shares to short. Mirrors short stock P&L exactly.",
+ profitDir:"if price decreases",profitAmt:"Up to ~$10,000",profitNote:"Profit increases as stock falls — mirrors gain from short-selling the actual stock",
+ lossDir:"if price increases",lossAmt:"Unlimited",lossNote:"Short call creates unlimited upside risk — identical to being short the stock",
+ bes:[{label:"BE",price:100}],
+ margin:{lvl:"high",req:"Naked call margin on short leg (~$2,000+)",note:"Short call requires full naked call margin. Broker treats this as equivalent to short stock."},
+ cases:[{p:85,t:"win",r:"+$1,500",d:"Put worth $1,500. Call expires worthless."},{p:100,t:"neutral-c",r:"~$0",d:"Near breakeven at entry strike."},{p:115,t:"lose",r:"−$1,500",d:"Call assigned: sell at $100, stock at $115."}],
+ range:[75,130],zones:[{f:75,t:100,z:"win"},{f:100,t:130,z:"loss"}]},
+
+{name:"Short Straddle",cat:"neutral",action:"credit",
+ kw:["straddle","short","sell","credit","neutral","pinned","theta","volatility sell"],
+ contractAction:"Sell ATM call + Sell ATM put (both $100, same expiry)",
+ rights:"Obligated to sell (call) or buy (put) at $100 depending on assignment",
+ view:"Stock stays pinned near strike. Sell volatility — collect premium from both sides.",
+ profitDir:"if price stays flat",profitFixed:true,profitAmt:"$600",profitNote:"Full combined premium kept if stock expires exactly at strike",
+ lossDir:"if large price move either direction",lossAmt:"Unlimited both sides",lossNote:"Loss accelerates beyond either breakeven — both naked legs have uncapped risk",
+ bes:[{label:"Lower BE",price:94},{label:"Upper BE",price:106}],
+ margin:{lvl:"high",req:"~$3,000–$5,000 (both naked legs)",note:"Margin on the larger-risk leg plus a percentage of the other. Requires highest options approval tier."},
+ cases:[{p:100,t:"win",r:"+$600",d:"Perfect pin. Both expire ATM worthless."},{p:94,t:"neutral-c",r:"Breakeven",d:"Lower BE = $100 − $6 combined premium."},{p:112,t:"lose",r:"−$600",d:"Call loss $1,200 minus $600 premium = −$600 net."}],
+ range:[75,130],zones:[{f:75,t:94,z:"loss"},{f:94,t:106,z:"win"},{f:106,t:130,z:"loss"}]},
+
+{name:"Short Strangle",cat:"neutral",action:"credit",
+ kw:["strangle","short","sell","credit","neutral","range","OTM","theta"],
+ contractAction:"Sell OTM call ($105) + Sell OTM put ($95)",
+ rights:"Obligated to sell at $105 (call) or buy at $95 (put) if assigned",
+ view:"Stock stays between both strikes. Wider profit range than straddle; lower premium collected.",
+ profitDir:"if price stays in range",profitFixed:true,profitAmt:"~$200",profitNote:"Full premium kept if stock remains between both strikes at expiry",
+ lossDir:"if large price move either direction",lossAmt:"Unlimited both sides",lossNote:"Loss beyond either breakeven — both naked legs have uncapped risk",
+ bes:[{label:"Lower BE",price:93},{label:"Upper BE",price:107}],
+ margin:{lvl:"high",req:"Naked margin on both legs (~$2,500+)",note:"Each naked leg requires standalone margin. Total = larger leg's full margin + 50–100% of the smaller."},
+ cases:[{p:100,t:"win",r:"+$200",d:"Both OTM, expire worthless."},{p:93,t:"neutral-c",r:"Breakeven",d:"Lower BE = $95 − $2 premium."},{p:112,t:"lose",r:"Loss begins $107",d:"Short call ITM above $107."}],
+ range:[75,130],zones:[{f:75,t:93,z:"loss"},{f:93,t:107,z:"win"},{f:107,t:130,z:"loss"}]},
+
+{name:"Iron Condor",cat:"neutral",action:"credit",
+ kw:["iron condor","credit","neutral","defined risk","range","OTM","spread","income","popular"],
+ contractAction:"Sell $100/$105 call spread + Sell $95/$100 put spread — net credit",
+ rights:"Defined obligations on both sides through purchased wing options",
+ view:"Stock stays within a range. Defined risk on both sides. High-probability income strategy.",
+ profitDir:"if price stays in range",profitFixed:true,profitAmt:"~$200",profitNote:"Full credit kept if stock stays between inner short strikes at expiry",
+ lossDir:"if large price move either direction",lossFixed:true,lossAmt:"~$300",lossNote:"Max loss = spread width ($500) − credit ($200). Defined on both sides",
+ bes:[{label:"Lower BE",price:93},{label:"Upper BE",price:107}],
+ margin:{lvl:"med",req:"$300 — max possible loss",note:"Defined risk. Margin = spread width − net credit. Much lower than straddle/strangle."},
+ cases:[{p:100,t:"win",r:"+$200",d:"Stock in range. All four legs expire worthless."},{p:90,t:"lose",r:"−$300",d:"Below $95 put spread — max loss."},{p:112,t:"lose",r:"−$300",d:"Above $105 call spread — max loss."}],
+ range:[75,130],zones:[{f:75,t:93,z:"loss"},{f:93,t:107,z:"win"},{f:107,t:130,z:"loss"}]},
+
+{name:"Iron Butterfly",cat:"neutral",action:"credit",
+ kw:["iron butterfly","credit","neutral","defined risk","ATM","wings","higher premium"],
+ contractAction:"Sell ATM call + ATM put ($100); buy $95 put + $105 call as wings",
+ rights:"Defined obligations at short ATM strikes; wings cap risk on both sides",
+ view:"Stock pins at short strike. Higher credit than condor; very narrow profit zone.",
+ profitDir:"if price pins at strike",profitFixed:true,profitAmt:"~$400",profitNote:"Maximum credit kept only if stock expires exactly at the ATM strike",
+ lossDir:"if price moves either direction",lossFixed:true,lossAmt:"~$100 per side",lossNote:"Max loss = wing spread width − credit. Defined on both sides",
+ bes:[{label:"Lower BE",price:96},{label:"Upper BE",price:104}],
+ margin:{lvl:"med",req:"$100 — max possible loss per side",note:"Fully defined risk. Both short ATM legs covered by OTM wings."},
+ cases:[{p:100,t:"win",r:"+$400",d:"Perfect pin. Full credit kept."},{p:95,t:"lose",r:"−$100",d:"At lower wing — max loss on put side."},{p:105,t:"lose",r:"−$100",d:"At upper wing — max loss on call side."}],
+ range:[75,130],zones:[{f:75,t:96,z:"loss"},{f:96,t:104,z:"win"},{f:104,t:130,z:"loss"}]},
+
+{name:"Long Butterfly",cat:"neutral",action:"debit",
+ kw:["butterfly","long","debit","neutral","defined risk","pin","low cost"],
+ contractAction:"Buy $95 call + Sell 2× $100 calls + Buy $105 call — same expiry",
+ rights:"Mixed rights (outer wings) and obligations (inner short calls)",
+ view:"Stock pins at middle strike at expiry. Cheap defined-risk trade for low-volatility forecast.",
+ profitDir:"if price pins at middle strike",profitFixed:true,profitAmt:"~$400",profitNote:"Maximum profit only if stock expires exactly at the middle strike",
+ lossDir:"if price moves either direction",lossFixed:true,lossAmt:"~$100",lossNote:"Full net debit lost if stock is at or outside the outer strikes at expiry",
+ bes:[{label:"Lower BE",price:96},{label:"Upper BE",price:104}],
+ margin:{lvl:"low",req:"$100 — net debit paid",note:"Fully defined risk. All legs cover each other. Total capital at risk = net debit only."},
+ cases:[{p:100,t:"win",r:"+$400",d:"Pin at middle. Spread worth $500, outer worthless."},{p:95,t:"lose",r:"−$100",d:"At outer strike — full debit lost."},{p:105,t:"lose",r:"−$100",d:"Symmetric max loss at upper outer strike."}],
+ range:[75,130],zones:[{f:75,t:96,z:"loss"},{f:96,t:104,z:"win"},{f:104,t:130,z:"loss"}]},
+
+{name:"Calendar Spread",cat:"neutral",action:"debit",
+ kw:["calendar","theta","vega","debit","neutral","horizontal","time decay"],
+ contractAction:"Buy back-month $100 option + Sell front-month $100 option",
+ rights:"Right on back month; short obligation on front month",
+ view:"Stock stays near strike. Front month decays faster. Benefits if implied volatility rises.",
+ profitDir:"if price stays near strike + time passes",profitFixed:true,profitAmt:"Limited (theta + vega gain)",profitNote:"Front month decays faster than back month; IV expansion adds extra profit",
+ lossDir:"if large price move either direction",lossFixed:true,lossAmt:"~$150",lossNote:"Large moves away from strike hurt both legs. Max loss = net debit at entry",
+ bes:[{label:"Lower BE",price:95},{label:"Upper BE",price:105}],
+ margin:{lvl:"med",req:"~$150 net debit + possible spread margin",note:"Front short option partially covered by back-month long. Some brokers add margin for different expirations."},
+ cases:[{p:100,t:"win",r:"~+$150+",d:"Front decays to near-zero. Back month retains value."},{p:95,t:"win",r:"Modest profit",d:"Slight move — front expires cheap, back holds."},{p:115,t:"lose",r:"−$150",d:"Large move: both legs lose. Max loss = net debit."}],
+ range:[75,130],zones:[{f:75,t:95,z:"loss"},{f:95,t:105,z:"win"},{f:105,t:130,z:"loss"}]},
+
+{name:"Long Straddle",cat:"volatility",action:"debit",
+ kw:["straddle","long","debit","vega","earnings","big move","direction unknown","long vega"],
+ contractAction:"Buy ATM call + Buy ATM put (both $100, same expiry)",
+ rights:"Right to buy and right to sell at same strike — both directions covered",
+ view:"Expects large move in either direction. Direction unknown (e.g., pre-earnings). Long vega.",
+ profitDir:"if large price move either direction",profitUnlim:true,profitAmt:"Unlimited (either direction)",profitNote:"Profit grows as stock moves away from strike past either breakeven",
+ lossDir:"if price stays flat",lossFixed:true,lossAmt:"$600",lossNote:"Maximum loss if stock pins exactly at strike — both options expire worthless",
+ bes:[{label:"Lower BE",price:94},{label:"Upper BE",price:106}],
+ margin:{lvl:"low",req:"$600 — full premium for both legs",note:"Both legs are long options — purely debit. No margin account needed."},
+ cases:[{p:112,t:"win",r:"+$600",d:"Call pays $1,200; put worthless. Net = $1,200 − $600."},{p:100,t:"lose",r:"−$600",d:"Stock pins at strike. Both expire worthless."},{p:88,t:"win",r:"+$600",d:"Put pays $1,200; call worthless. Symmetric gain."}],
+ range:[75,130],zones:[{f:75,t:94,z:"win"},{f:94,t:106,z:"loss"},{f:106,t:130,z:"win"}]},
+
+{name:"Long Strangle",cat:"volatility",action:"debit",
+ kw:["strangle","long","debit","vega","earnings","OTM","big move","cheap"],
+ contractAction:"Buy OTM call ($105) + Buy OTM put ($95)",
+ rights:"Right to buy at $105 and right to sell at $95",
+ view:"Very large move expected. Cheaper than straddle; requires a bigger move to profit.",
+ profitDir:"if very large price move either direction",profitUnlim:true,profitAmt:"Unlimited (beyond breakevens)",profitNote:"Profit grows as stock moves beyond either breakeven",
+ lossDir:"if price stays between strikes",lossFixed:true,lossAmt:"~$200",lossNote:"Max loss if stock stays between the two strikes at expiry",
+ bes:[{label:"Lower BE",price:93},{label:"Upper BE",price:107}],
+ margin:{lvl:"low",req:"~$200 — total premium for both OTM legs",note:"Both are long options — fully paid debit. Cheaper than straddle."},
+ cases:[{p:115,t:"win",r:"+$800",d:"Call pays $1,000; put worthless. Net = $1,000 − $200."},{p:100,t:"lose",r:"−$200",d:"Both OTM — expire worthless."},{p:93,t:"neutral-c",r:"Breakeven",d:"Put worth $200 = net premium. Breakeven."}],
+ range:[75,130],zones:[{f:75,t:93,z:"win"},{f:93,t:107,z:"loss"},{f:107,t:130,z:"win"}]},
+
+{name:"Reverse Iron Condor",cat:"volatility",action:"debit",
+ kw:["reverse iron condor","debit","volatility","defined risk","big move","long vega"],
+ contractAction:"Buy $100/$105 call spread + Buy $95/$100 put spread — net debit",
+ rights:"Rights on long legs; obligations on short legs — all defined risk",
+ view:"Large move in either direction. Defined cost and risk. Buy volatility at a capped price.",
+ profitDir:"if large price move either direction",profitFixed:true,profitAmt:"~$300 (either side)",profitNote:"Max profit if stock moves beyond either outer wing strike at expiry",
+ lossDir:"if price stays flat",lossFixed:true,lossAmt:"~$200",lossNote:"Max loss if stock stays between the inner strikes",
+ bes:[{label:"Lower BE",price:93},{label:"Upper BE",price:107}],
+ margin:{lvl:"low",req:"~$200 — net debit paid",note:"Fully defined risk. Net debit is total capital at risk."},
+ cases:[{p:90,t:"win",r:"+$300",d:"Put spread fully ITM. Max profit on downside."},{p:112,t:"win",r:"+$300",d:"Call spread fully ITM. Max profit on upside."},{p:100,t:"lose",r:"−$200",d:"Stock flat — all legs worthless."}],
+ range:[75,130],zones:[{f:75,t:93,z:"win"},{f:93,t:107,z:"loss"},{f:107,t:130,z:"win"}]},
+
+{name:"Reverse Iron Butterfly",cat:"volatility",action:"debit",
+ kw:["reverse iron butterfly","debit","volatility","ATM","big move","long vega"],
+ contractAction:"Buy ATM straddle + Sell OTM wings ($95 put + $105 call)",
+ rights:"Rights at ATM strikes; obligations on OTM wings",
+ view:"Large move needed. Wings reduce cost vs. naked straddle. Defined risk both sides.",
+ profitDir:"if large price move either direction",profitFixed:true,profitAmt:"~$300 per side",profitNote:"Max profit if stock reaches or exceeds either outer wing strike",
+ lossDir:"if price pins at strike",lossFixed:true,lossAmt:"~$200",lossNote:"Max loss if stock pins at ATM — both short ATM options expire worthless",
+ bes:[{label:"Lower BE",price:98},{label:"Upper BE",price:102}],
+ margin:{lvl:"low",req:"~$200 — net debit",note:"Short wings fully covered by long ATM options. Net debit is total capital at risk."},
+ cases:[{p:95,t:"win",r:"+$300",d:"Put spread fully in-the-money."},{p:100,t:"lose",r:"−$200",d:"Stock pins at ATM. Full debit lost."},{p:105,t:"win",r:"+$300",d:"Call spread fully in-the-money."}],
+ range:[75,130],zones:[{f:75,t:98,z:"win"},{f:98,t:102,z:"loss"},{f:102,t:130,z:"win"}]},
+
+{name:"Collar",cat:"income",action:"variable",
+ kw:["collar","hedge","covered call","put","income","zero cost","defined risk"],
+ contractAction:"Own 100 shares + Buy $95 put + Sell $105 call — near zero net cost",
+ rights:"Right to sell at $95 (put); obligated to sell at $105 (call)",
+ view:"Protect existing position. Caps both upside and downside. Often near-zero net cost.",
+ profitDir:"if price increases (up to $105)",profitFixed:true,profitAmt:"+$500 max",profitNote:"Gain capped at call strike. Upside above $105 is sold away",
+ lossDir:"if price decreases (capped at $95)",lossFixed:true,lossAmt:"−$500 max",lossNote:"Downside floored at put strike. Loss capped = stock cost − put strike",
+ bes:[{label:"BE",price:100}],
+ margin:{lvl:"low",req:"Put premium (or zero if net credit)",note:"Call covered by shares owned. Near zero net cost when balanced correctly."},
+ cases:[{p:80,t:"win",r:"Loss capped −$500",d:"Put floor at $95. Effective sell at $95, not $80."},{p:115,t:"win",r:"Gain capped +$500",d:"Called away at $105. Gain capped at $5/share."},{p:100,t:"neutral-c",r:"~$0",d:"Flat at cost. Near zero net P&L."}],
+ range:[75,130],zones:[{f:75,t:95,z:"loss"},{f:95,t:105,z:"win"},{f:105,t:130,z:"win"}]},
+
+{name:"Poor Man's Covered Call",cat:"income",action:"debit",
+ kw:["PMCC","LEAPS","diagonal","income","debit","covered call","synthetic","capital efficient"],
+ contractAction:"Buy deep ITM LEAPS call ($80 strike, ~2yr) + Sell short-dated OTM call ($105)",
+ rights:"Right to buy via LEAPS at $80; obligated to sell at $105 (short call)",
+ view:"Mimic covered call at fraction of capital. Roll short-dated calls monthly for recurring income.",
+ profitDir:"if price increases (to short call strike)",profitFixed:true,profitAmt:"Rolling premium income",profitNote:"Income accumulates via monthly rolls. LEAPS acts as share surrogate at much lower cost",
+ lossDir:"if price decreases",lossFixed:true,lossAmt:"Net debit (LEAPS − premiums)",lossNote:"Maximum loss = LEAPS premium minus all premiums collected from rolls over time",
+ bes:[{label:"Approx BE",price:97}],
+ margin:{lvl:"low",req:"LEAPS premium ~$2,200 (net debit)",note:"LEAPS covers the short call — treated as a diagonal spread. Total risk = net debit only."},
+ cases:[{p:105,t:"win",r:"+$300/cycle",d:"Short call expires worthless. Roll again next month."},{p:95,t:"win",r:"Keep credit",d:"Short OTM call worthless. LEAPS still valuable."},{p:75,t:"lose",r:"LEAPS loses value",d:"Stock below $80 LEAPS strike. Deep ITM call loses intrinsic."}],
+ range:[75,130],zones:[{f:75,t:97,z:"loss"},{f:97,t:130,z:"win"}]},
+
+{name:"Covered Strangle",cat:"income",action:"credit",
+ kw:["strangle","covered","income","credit","own stock","double exposure","range"],
+ contractAction:"Own 100 shares + Sell OTM call ($105) + Sell OTM put ($95)",
+ rights:"Obligated to sell shares at $105 (call); obligated to buy 100 more at $95 (put)",
+ view:"Collect more premium than covered call. Risk: put assignment doubles share exposure.",
+ profitDir:"if price stays in range",profitFixed:true,profitAmt:"~$200",profitNote:"Full premium kept if stock stays between both strikes at expiry",
+ lossDir:"if price decreases",lossAmt:"Stock falls + double exposure",lossNote:"Put assignment forces buying 200 shares total — double the downside risk",
+ bes:[{label:"Lower BE",price:93}],
+ margin:{lvl:"high",req:"Naked put margin + shares as call collateral",note:"Call covered by shares. Put exposed below $95 — requires naked put margin on top."},
+ cases:[{p:100,t:"win",r:"+$200",d:"Both options expire worthless. Keep both premiums."},{p:85,t:"lose",r:"200 shares at avg $97.50",d:"Put assigned: own 200 shares. Double exposure."},{p:110,t:"win",r:"+$200 only",d:"Called away at $105. Keep premium, miss upside above $105."}],
+ range:[75,130],zones:[{f:75,t:93,z:"loss"},{f:93,t:130,z:"win"}]},
+
+{name:"Jade Lizard",cat:"income",action:"credit",
+ kw:["jade lizard","no upside risk","credit","neutral bullish","OTM","short put","income"],
+ contractAction:"Sell OTM put ($95) + Sell OTM call spread ($105/$110) — net credit > spread width",
+ rights:"Obligated to buy at $95 (put); obligated on $105/$110 call spread",
+ view:"Neutral to bullish. No upside risk when credit > call spread width. Downside risk below put breakeven.",
+ profitDir:"if price stays above put strike",profitFixed:true,profitAmt:"Net credit (~$350)",profitNote:"No risk to the upside if credit fully covers the call spread width",
+ lossDir:"if price decreases below put",lossAmt:"Below put breakeven",lossNote:"Loss only if stock falls below put breakeven. Zero upside risk if structured correctly",
+ bes:[{label:"Put BE",price:91}],
+ margin:{lvl:"high",req:"Naked put margin + call spread margin",note:"Short put requires naked put margin (~20% of stock). Call spread adds defined-risk margin = spread width − credit."},
+ cases:[{p:100,t:"win",r:"+$350",d:"All legs expire worthless. Full credit kept."},{p:107,t:"win",r:"+$350",d:"Within call spread — still full profit. No upside risk."},{p:87,t:"lose",r:"Loss on downside",d:"Below put BE $91. Loss = (91 − stock) × 100."}],
+ range:[75,130],zones:[{f:75,t:91,z:"loss"},{f:91,t:130,z:"win"}]},
+
+{name:"Delta Hedge",cat:"greek",action:"variable",
+ kw:["delta","hedge","neutral","dynamic","market maker","gamma","rebalancing","delta neutral"],
+ contractAction:"Hold offsetting delta in options + underlying stock to maintain delta ≈ 0",
+ rights:"Dynamic — continuously adjusted ratio of stock/options",
+ view:"Capture theta or volatility premium without directional exposure. Used by market makers.",
+ profitDir:"if implied vol > realized vol",profitAmt:"Theta + gamma scalp profits",profitNote:"Profit from time decay when implied vol exceeds realized; gamma rebalancing adds income",
+ lossDir:"if realized vol > implied vol",lossAmt:"Transaction costs + tail gaps",lossNote:"Loss if realized volatility exceeds implied, or if large price gaps occur between rebalances",
+ bes:[{label:"IV vs RV",price:100}],
+ margin:{lvl:"med",req:"Stock margin + option margin (dynamic)",note:"Requirement fluctuates as position is rebalanced. Both options and hedging stock require capital."},
+ cases:[{p:105,t:"win",r:"Gamma profit",d:"Rebalance: sell stock at $105 to stay delta-neutral. Capture the move."},{p:100,t:"win",r:"Theta accrual",d:"Stock stable. Time decay profits accrue from short options."},{p:115,t:"lose",r:"Possible gap loss",d:"Rapid gap-move can cause loss if realized vol exceeds implied."}],
+ range:[75,130],zones:[{f:75,t:130,z:"win"}]},
+
+{name:"Gamma Scalping",cat:"greek",action:"variable",
+ kw:["gamma","scalping","long straddle","delta neutral","dynamic","volatility trading"],
+ contractAction:"Buy ATM straddle + continuously delta-hedge by trading the underlying",
+ rights:"Long gamma — benefit from large moves; short theta — pay time decay each day",
+ view:"Long gamma: profit from large realized moves; need moves to exceed daily theta cost.",
+ profitDir:"if large intraday price moves",profitAmt:"Each large move = scalp profit",profitNote:"Each significant swing generates a delta-hedge trade that locks in a small profit",
+ lossDir:"if price stays flat (theta bleed)",lossAmt:"~$30–$60 theta/day",lossNote:"Time decay bleeds the straddle if stock doesn't move enough to cover daily theta",
+ bes:[{label:"Break-even move",price:100}],
+ margin:{lvl:"med",req:"Straddle premium + active stock trading capital",note:"Straddle bought at full debit. Additional capital for active stock trades."},
+ cases:[{p:105,t:"win",r:"Scalp profit",d:"Delta exceeded 0.50 — sell shares. Stock pulls back — buy back cheaper."},{p:100,t:"lose",r:"Theta bleed",d:"Stock flat. Theta erodes straddle value."},{p:115,t:"win",r:"Large move profit",d:"Big swing allows multiple round-trip hedges. Cumulative gamma > theta."}],
+ range:[75,130],zones:[{f:75,t:94,z:"win"},{f:94,t:106,z:"loss"},{f:106,t:130,z:"win"}]},
+
+{name:"Vega Trade",cat:"greek",action:"debit",
+ kw:["vega","implied volatility","long vega","volatility expansion","earnings","IV buy"],
+ contractAction:"Buy options positioned for implied volatility expansion",
+ rights:"Right to profit as implied volatility rises — increases option prices across the board",
+ view:"Expects implied volatility to rise (e.g., before earnings). Pure volatility play.",
+ profitDir:"if implied volatility increases",profitAmt:"Proportional to IV expansion",profitNote:"Vega = $ gain per 1% rise in IV. Options become more expensive as vol rises",
+ lossDir:"if implied volatility decreases (vol crush)",lossFixed:true,lossAmt:"Premium paid",lossNote:"If IV collapses after earnings AND stock doesn't move — full premium at risk ('vol crush')",
+ bes:[{label:"IV breakeven",price:100}],
+ margin:{lvl:"low",req:"Full premium paid for long options",note:"All long options — purely debit. No margin needed."},
+ cases:[{p:100,t:"win",r:"+Vega profit",d:"IV jumps from 25% to 40% pre-earnings. Option rises without stock moving."},{p:100,t:"lose",r:"−Vol crush",d:"Earnings pass. IV drops from 50% to 20%. Option value collapses."},{p:112,t:"win",r:"+Delta + Vega",d:"Stock moves AND vol stays high. Double benefit."}],
+ range:[75,130],zones:[{f:75,t:94,z:"win"},{f:94,t:106,z:"loss"},{f:106,t:130,z:"win"}]},
+
+{name:"Theta Decay Trade",cat:"greek",action:"credit",
+ kw:["theta","time decay","premium selling","credit","income","short options","sell vol"],
+ contractAction:"Sell options (straddle, condor, strangle) to profit from time value erosion",
+ rights:"Obligated positions that gain value as time passes and options decay toward zero",
+ view:"Collect daily theta. Profit as time premium evaporates toward expiry. Short volatility.",
+ profitDir:"if price stays flat + time passes",profitAmt:"Total premium collected",profitNote:"Theta accrues daily — each day closer to expiry = more profit from time decay",
+ lossDir:"if large price move or IV spike",lossAmt:"Large directional or vol move",lossNote:"Large price move or IV expansion erases theta gains quickly",
+ bes:[{label:"Depends on structure",price:100}],
+ margin:{lvl:"high",req:"Naked margin or spread width − credit",note:"Naked = substantial margin; spreads = max loss as collateral. Credit received reduces requirement."},
+ cases:[{p:100,t:"win",r:"Daily theta accrual",d:"Stock flat. Options lose time value every day."},{p:107,t:"lose",r:"Delta loss",d:"Stock moves beyond breakeven. Delta loss > theta gains."},{p:102,t:"win",r:"+$50/day theta",d:"Slow drift. Theta exceeds small delta P&L. Net positive."}],
+ range:[75,130],zones:[{f:75,t:93,z:"loss"},{f:93,t:107,z:"win"},{f:107,t:130,z:"loss"}]},
+
+{name:"Strap",cat:"exotic",action:"debit",
+ kw:["strap","bullish","straddle","2 calls 1 put","debit","volatile","asymmetric"],
+ contractAction:"Buy 2 ATM calls + Buy 1 ATM put (same strike, same expiry)",
+ rights:"Right to buy 2× at $100 (calls) + right to sell 1× at $100 (put)",
+ view:"Expects large move with bullish bias. Double upside exposure; single downside exposure.",
+ profitDir:"if large price move (bullish bias)",profitUnlim:true,profitAmt:"Unlimited upside (2× calls)",profitNote:"Upside profit doubles vs. straddle. Lower upside breakeven due to extra call",
+ lossDir:"if price stays flat",lossFixed:true,lossAmt:"~$900",lossNote:"All three options expire worthless if stock pins at strike",
+ bes:[{label:"Lower BE",price:91},{label:"Upper BE",price:104}],
+ margin:{lvl:"low",req:"~$900 — full premium (3 long options)",note:"All three legs are long — purely debit. No margin. Max loss = full premium paid."},
+ cases:[{p:115,t:"win",r:"+$2,100",d:"2 calls: 2×$1,500=$3,000 − $900 premium."},{p:85,t:"win",r:"+$600",d:"Put pays $1,500 − $900 premium."},{p:100,t:"lose",r:"−$900",d:"All three expire ATM worthless."}],
+ range:[75,130],zones:[{f:75,t:91,z:"win"},{f:91,t:104,z:"loss"},{f:104,t:130,z:"win"}]},
+
+{name:"Strip",cat:"exotic",action:"debit",
+ kw:["strip","bearish","straddle","1 call 2 puts","debit","volatile","asymmetric"],
+ contractAction:"Buy 1 ATM call + Buy 2 ATM puts (same strike, same expiry)",
+ rights:"Right to buy 1× at $100 (call) + right to sell 2× at $100 (puts)",
+ view:"Expects large move with bearish bias. Double downside exposure; single upside exposure.",
+ profitDir:"if large price move (bearish bias)",profitAmt:"Large downside (2× puts); unlimited upside",profitNote:"Downside profit doubles vs. straddle. For bears who also want upside optionality",
+ lossDir:"if price stays flat",lossFixed:true,lossAmt:"~$900",lossNote:"All three options expire worthless if stock pins at strike",
+ bes:[{label:"Upper BE",price:109},{label:"Lower BE",price:95}],
+ margin:{lvl:"low",req:"~$900 — full premium (3 long options)",note:"All three legs are long — purely debit. No margin."},
+ cases:[{p:85,t:"win",r:"+$2,100",d:"2 puts: 2×$1,500=$3,000 − $900 premium."},{p:115,t:"win",r:"+$600",d:"Call pays $1,500 − $900 premium."},{p:100,t:"lose",r:"−$900",d:"All three expire ATM worthless."}],
+ range:[75,130],zones:[{f:75,t:95,z:"win"},{f:95,t:109,z:"loss"},{f:109,t:130,z:"win"}]},
+
+{name:"Ratio Backspread (Call)",cat:"exotic",action:"variable",
+ kw:["backspread","ratio","long vega","calls","volatile","unlimited upside","advanced"],
+ contractAction:"Sell 1 ITM call ($95) + Buy 2 OTM calls ($105) — net credit or zero cost",
+ rights:"Obligated on 1 short ITM call; right to buy 2× at OTM strike",
+ view:"Expects very large up move or stock to fall below ITM strike. Net credit if stock stays flat.",
+ profitDir:"if very large price increase",profitUnlim:true,profitAmt:"Unlimited above upper BE",profitNote:"Above upper breakeven, 2 long calls outpace 1 short — unlimited net upside",
+ lossDir:"if price stays in dead zone between strikes",lossFixed:true,lossAmt:"Limited in dead zone",lossNote:"Max loss between the two strikes — short ITM call ITM but OTM calls worthless",
+ bes:[{label:"Lower BE",price:95},{label:"Upper BE",price:115}],
+ margin:{lvl:"high",req:"Naked margin on short ITM call",note:"Short ITM call only partially covered by extra OTM longs. Requires significant margin."},
+ cases:[{p:120,t:"win",r:"+Large profit",d:"Two long calls deep ITM. Net large profit above upper BE."},{p:105,t:"lose",r:"Max loss",d:"Dead zone: short call costs $1,000; OTM calls worthless."},{p:92,t:"win",r:"+Net credit",d:"Below short call — all expire worthless. Keep entry credit."}],
+ range:[75,130],zones:[{f:75,t:95,z:"win"},{f:95,t:115,z:"loss"},{f:115,t:130,z:"win"}]},
+
+{name:"Box Spread",cat:"exotic",action:"debit",
+ kw:["box","arbitrage","risk-free","synthetic bond","interest rate","defined","locked"],
+ contractAction:"Buy $95/$100 bull call spread + Buy $100/$95 bear put spread",
+ rights:"Combination that locks in a fixed payoff regardless of stock price",
+ view:"Not directional — locks in a risk-free payoff equal to spread width at expiry. Used for financing.",
+ profitDir:"no direction needed — fixed payoff",profitFixed:true,profitAmt:"$500 at expiry (always)",profitNote:"If purchased below present value of spread width, a guaranteed profit is locked in",
+ lossDir:"if overpaid above fair value",lossFixed:true,lossAmt:"Cost above fair value only",lossNote:"Loss only if you pay more than the discounted present value of the spread width",
+ bes:[{label:"Fair value",price:100}],
+ margin:{lvl:"low",req:"Net debit (~PV of spread width)",note:"Risk-free synthetic position. Very low margin — all legs offset each other."},
+ cases:[{p:80,t:"win",r:"+$500 regardless",d:"Put spread pays $500; call spread worthless."},{p:110,t:"win",r:"+$500 regardless",d:"Call spread pays $500; put spread worthless."},{p:100,t:"neutral-c",r:"$500 at expiry",d:"Box always converges to spread width. Direction irrelevant."}],
+ range:[75,130],zones:[{f:75,t:130,z:"win"}]},
+];
+
+const CAT={all:{label:"All",dot:"#6b7280"},bullish:{label:"Bullish",dot:"#059669"},bearish:{label:"Bearish",dot:"#dc2626"},neutral:{label:"Neutral",dot:"#2563eb"},volatility:{label:"Volatility",dot:"#7c3aed"},income:{label:"Income",dot:"#d97706"},greek:{label:"Greek",dot:"#0891b2"},exotic:{label:"Exotic",dot:"#9d174d"}};
+const BC={debit:{bg:"#eff6ff",c:"#1d4ed8"},credit:{bg:"#f0fdf4",c:"#15803d"},variable:{bg:"#f5f3ff",c:"#6d28d9"}};
+
+let activeCat="all",activeStrat=null,searchQ="";
+const isMobile=()=>window.innerWidth<768;
+
+function buildCatBar(){
+  document.getElementById("catBar").innerHTML=Object.entries(CAT).map(([k,v])=>
+    `<div class="cat-chip${activeCat===k?" active":""}" data-c="${k}" onclick="setCat('${k}')">${v.label}</div>`).join("");
+}
+function setCat(c){activeCat=c;searchQ="";document.getElementById("searchInput").value="";buildCatBar();buildList();document.getElementById("dropDown").classList.remove("open")}
+
+function visibleStrats(){
+  let d=[...STRATS];
+  if(activeCat!=="all")d=d.filter(s=>s.cat===activeCat);
+  if(searchQ){const q=searchQ.toLowerCase();d=d.filter(s=>s.name.toLowerCase().includes(q)||(s.kw&&s.kw.some(k=>k.toLowerCase().includes(q)))||s.action.toLowerCase().includes(q)||s.cat.toLowerCase().includes(q));}
+  return d;
+}
+
+function buildList(){
+  const list=document.getElementById("stratList");
+  const data=visibleStrats();
+  if(!data.length){list.innerHTML=`<div style="padding:20px 16px;font-size:12.5px;color:#9ca3af;text-align:center">No strategies found</div>`;return;}
+  const groups={};
+  data.forEach(s=>{if(!groups[s.cat])groups[s.cat]=[];groups[s.cat].push(s)});
+  let html="";
+  Object.entries(groups).forEach(([cat,strats])=>{
+    if(activeCat==="all")html+=`<div class="sb-group-label">${CAT[cat]?.label||cat}</div>`;
+    strats.forEach(s=>{
+      const bc=BC[s.action]||BC.variable;
+      html+=`<div class="sb-item${activeStrat===s.name?" active":""}" onclick="showDetail('${s.name}')">
+        <div class="sb-item-dot dot-${s.cat}"></div>
+        <div style="flex:1;min-width:0">
+          <div class="sb-item-name">${s.name}</div>
+          <div class="sb-item-sub">${s.contractAction.split("—")[0].trim()}</div>
+        </div>
+        <span class="sb-item-tag" style="background:${bc.bg};color:${bc.c}">${s.action}</span>
+      </div>`;
+    });
+  });
+  html+=`<div class="sb-count">${data.length} strategies</div>`;
+  list.innerHTML=html;
+}
+
+function buildPLBar(s){
+  const[lo,hi]=[s.range[0],s.range[1]],rng=hi-lo;
+  const pct=v=>((Math.max(lo,Math.min(hi,v))-lo)/rng*100).toFixed(2);
+  let z="";
+  (s.zones||[]).forEach(zn=>z+=`<div class="bz bz-${zn.z}" style="left:${pct(zn.f)}%;width:${(pct(zn.t)-pct(zn.f))}%"></div>`);
+  z+=`<div class="plbar-marker spot" style="left:${pct(100)}%"><div class="plbar-mlabel spot">Spot $100</div></div>`;
+  (s.bes||[]).forEach(be=>z+=`<div class="plbar-marker be" style="left:${pct(be.price)}%"><div class="plbar-mlabel-bot">${be.label} $${be.price}</div></div>`);
+  const ax=[lo,lo+Math.round(rng*.25),lo+Math.round(rng*.5),lo+Math.round(rng*.75),hi];
+  return`<div class="plbar-wrap">
+    <div class="sec-title">P&L zone — AAPL price at expiry</div>
+    <div class="plbar-track">${z}</div>
+    <div class="plbar-axis">${ax.map(v=>`<span>$${v}</span>`).join("")}</div>
+    <div class="plbar-legend">
+      <div class="pl-leg"><div class="pl-leg-dot" style="background:rgba(5,150,105,.2);border:1px solid #059669"></div>Profit zone</div>
+      <div class="pl-leg"><div class="pl-leg-dot" style="background:rgba(220,38,38,.12);border:1px solid #dc2626"></div>Loss zone</div>
+    </div>
+  </div>`;
+}
+
+function showDetail(name){
+  const s=STRATS.find(x=>x.name===name);if(!s)return;
+  activeStrat=name;buildList();
+  const bc=BC[s.action]||BC.variable;
+
+  const finHTML=`<div class="sec-title">Financials</div>
+    <div class="fin-row">
+      <div class="fin-box profit">
+        <div class="fin-header"><span class="fin-title">Max profit</span>${s.profitUnlim?`<span class="fin-unlim">Unlimited</span>`:""}</div>
+        <div class="fin-amount">${s.profitAmt}</div>
+        <span class="fin-dir-pill">${s.profitDir||""}</span>
+        <div class="fin-note">${s.profitNote}</div>
+      </div>
+      <div class="fin-box loss">
+        <div class="fin-header"><span class="fin-title">Max loss</span>${(s.lossAmt||"").toLowerCase().includes("unlimited")?`<span style="font-size:10px;font-weight:700;background:#ffe4e6;color:#b91c1c;padding:2px 7px;border-radius:4px">Unlimited</span>`:""}</div>
+        <div class="fin-amount">${s.lossAmt}</div>
+        <span class="fin-dir-pill">${s.lossDir||""}</span>
+        <div class="fin-note">${s.lossNote}</div>
+      </div>
+    </div>
+    ${(s.bes||[]).length?`<div class="be-band">${s.bes.map(be=>`<div class="be-item"><div class="be-dot"></div><span class="be-label">${be.label}:</span><span class="be-val">$${be.price}</span></div>`).join("")}</div>`:``}`;
+
+  const marginHTML=`<div class="sec-title">Margin requirement</div>
+    <div class="margin-block ${s.margin.lvl}">
+      <div class="margin-top-row"><span class="margin-badge ${s.margin.lvl}">${s.margin.lvl==="low"?"Low / defined":s.margin.lvl==="med"?"Moderate":"High / naked"}</span></div>
+      <div class="margin-req">${s.margin.req}</div>
+      <div class="margin-note">${s.margin.note}</div>
+    </div>`;
+
+  const casesHTML=`<div class="sec-title">Example outcomes — AAPL · Spot $100 · Strike $100 · Premium $3</div>
+    <div class="cases">${s.cases.map(c=>`<div class="case-row ${c.t}">
+      <div class="case-ico">${c.t==="win"?"✅":c.t==="lose"?"❌":"⚖"}</div>
+      <div><div class="case-price">AAPL at $${c.p}</div><div class="case-result">${c.r}</div><div class="case-desc">${c.d}</div></div>
+    </div>`).join("")}</div>`;
+
+  const detailHTML=`<div class="detail-pane">
+    <div class="d-header">
+      <div class="d-crumbs">
+        <span>All strategies</span><span class="d-crumb-sep">›</span>
+        <span class="col-${s.cat}" style="font-weight:600">${CAT[s.cat]?.label||s.cat}</span>
+        <span class="d-crumb-sep">›</span><span style="color:#374151">${s.name}</span>
+      </div>
+      <div class="d-title">${s.name}</div>
+      <div class="d-badges">
+        <span class="d-badge" style="background:${bc.bg};color:${bc.c}">${s.action}</span>
+        <span class="d-badge col-${s.cat}" style="background:#f8f9fb;border:1px solid #e5e7eb">${CAT[s.cat]?.label||s.cat}</span>
+      </div>
+      <div class="d-view">${s.view}</div>
+      <div class="kw-wrap">${(s.kw||[]).map(k=>`<span class="kw">${k}</span>`).join("")}</div>
+    </div>
+    <div class="cards-row">
+      <div class="info-card"><div class="ic-label">Contract action</div><div class="ic-val">${s.contractAction}</div></div>
+      <div class="info-card"><div class="ic-label">Rights / obligation</div><div class="ic-val">${s.rights}</div></div>
+    </div>
+    ${finHTML}${marginHTML}${buildPLBar(s)}${casesHTML}
+  </div>`;
+
+  if(isMobile()){
+    // Mobile: show content pane, hide sidebar, add header with back button
+    document.getElementById("sidebar").classList.add("hidden");
+    const ca=document.getElementById("contentArea");
+    ca.classList.add("visible");
+    ca.innerHTML=`
+      <div class="mobile-header">
+        <button class="mobile-back-btn" onclick="mobileBack()">← Back</button>
+        <div class="mobile-header-title">${s.name}</div>
+      </div>
+      ${detailHTML}`;
+    ca.scrollTop=0;
+  } else {
+    // Desktop: just update content area
+    const ca=document.getElementById("contentArea");
+    ca.innerHTML=detailHTML;
+    ca.scrollTop=0;
+  }
+}
+
+function mobileBack(){
+  activeStrat=null;
+  document.getElementById("sidebar").classList.remove("hidden");
+  const ca=document.getElementById("contentArea");
+  ca.classList.remove("visible");
+  ca.innerHTML=`<div class="empty-pane">
+    <div class="empty-pane-icon">📖</div>
+    <div class="empty-pane-title">Select a strategy</div>
+    <div class="empty-pane-sub">Choose from the list, or search by name or keyword</div>
+  </div>`;
+  buildList();
+}
+
+// Search
+const inp=document.getElementById("searchInput");
+const drop=document.getElementById("dropDown");
+inp.addEventListener("input",function(){
+  searchQ=this.value.trim();buildList();
+  if(!searchQ){drop.classList.remove("open");return;}
+  const q=searchQ.toLowerCase();
+  const hits=STRATS.filter(s=>s.name.toLowerCase().includes(q)||(s.kw&&s.kw.some(k=>k.toLowerCase().includes(q)))||s.action.toLowerCase().includes(q)).slice(0,7);
+  if(!hits.length){drop.classList.remove("open");return;}
+  drop.innerHTML=hits.map(s=>{const bc=BC[s.action]||BC.variable;return`<div class="dd-row" onclick="showDetail('${s.name}');inp.value='';searchQ='';drop.classList.remove('open');buildList()">
+    <div class="sb-item-dot dot-${s.cat}"></div>
+    <div class="dd-name">${s.name}</div>
+    <span class="dd-badge" style="background:${bc.bg};color:${bc.c}">${s.action}</span>
+  </div>`;}).join("");
+  drop.classList.add("open");
+});
+document.addEventListener("click",e=>{if(!e.target.closest(".sb-search"))drop.classList.remove("open")});
+
+// Handle resize between mobile/desktop
+window.addEventListener("resize",()=>{
+  if(!isMobile()&&activeStrat){
+    document.getElementById("sidebar").classList.remove("hidden");
+    const ca=document.getElementById("contentArea");
+    ca.classList.remove("visible");
+    showDetail(activeStrat);
+  }
+});
+
+buildCatBar();
+buildList();
+</script>
+</body>
+</html>
